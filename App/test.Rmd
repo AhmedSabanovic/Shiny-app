@@ -1,0 +1,61 @@
+---
+title: "testing"
+author: "Aleman Mihnea"
+date: "`r Sys.Date()`"
+output: html_document
+---
+```{r}
+library(shiny)
+library(ggplot2)
+library(plotly)
+library(dplyr)
+library(tidyr)
+library(DT)
+library(jsonlite)
+library(countrycode)
+library(shinyalert)
+library(maps)
+```
+
+```{r}
+data_cia <- fromJSON("data_cia.json")
+```
+
+```{r}
+
+data_cia <- data_cia %>%
+  rename(
+    iso3 = ISO3, 
+    median_age = median_age, 
+    youth_unemployment_rate = youth_unempl_rate,
+    net_migration_rate = net_migr_rate, 
+    electricity_fossil_fuel = electricity_fossil_fuel, 
+    area = area, 
+    population_growth_rate = pop_growth_rate, 
+    life_expectancy = life_expectancy
+  )
+```
+
+```{r}
+world_map <- map_data("world")
+head(world_map)
+```
+
+```{r}
+ggplot(world_map, aes(x = long, y = lat, group = group)) +
+geom_polygon(colour = "white")
+```
+```{r}
+
+world_map$ISO3 <- countrycode::countrycode(sourcevar = world_map$region,
+origin = "country.name",
+destination = "iso3c", nomatch = NA)
+print(sum(is.na(world_map$ISO3)))
+```
+
+```{r}
+
+world_map <- world_map %>%
+      left_join(data_cia, by = c("ISO3" = "iso3")) %>%
+      filter(!is.na(ISO3))
+```
